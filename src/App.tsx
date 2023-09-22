@@ -8,13 +8,12 @@ import backCardEllipses from "./assets/back_card_ellipses.svg";
 import backCardRect from "./assets/back_card_rect.png";
 import { Form, Formik } from "formik";
 import * as Yup from "yup";
-import { PatternFormat } from "react-number-format";
 import InputField from "./components/Input";
 import ReceiptComponent from "./components/ReceiptComponent";
 
 interface CardDetailsType {
   name: string;
-  cardNumber: string | null | number;
+  cardNumber: string;
   month: string;
   year: string;
   cvc: string | null;
@@ -85,19 +84,25 @@ const CardForm = ({
         initialValues={cardDetails}
         validationSchema={Yup.object().shape({
           cardNumber: Yup.number()
-            .min(16, "Too short")
-            .typeError("Wrong format, numbers only")
+            .test(
+              "len",
+              "Must be exactly 16 characters",
+              (val) => Math.ceil(Math.log10(Number(val && val) + 1)) === 16
+            )
             .required("Can't be blank"),
-          month: Yup.number()
-            .max(99, "Input must be 2 digits")
-            .required("Can't be blank"),
-          year: Yup.number()
-            .max(99, "Input must be 2 digits")
-            .required("Can't be blank"),
-          name: Yup.string().required("Can't be blank"),
-          cvc: Yup.number()
+          month: Yup.string()
+            .test("len", "Must be 2 digits", (val) => val?.length === 2)
             .required("Can't be blank")
-            .typeError("Wrong format, numbers only"),
+            .matches(/^\d+$/, "Wrong format, numbers only"),
+          year: Yup.string()
+            .test("len", "Must be 2 digits", (val) => val?.length === 2)
+            .required("Can't be blank")
+            .matches(/^\d+$/, "Wrong format, numbers only"),
+          name: Yup.string().required("Can't be blank"),
+          cvc: Yup.string()
+            .required("Can't be blank")
+            .test("len", "Must be 3 digits", (val) => val?.length === 3)
+            .matches(/^\d+$/, "Wrong format, numbers only"),
         })}
         onSubmit={() => {
           handleIsComplete(true);
@@ -121,10 +126,30 @@ const CardForm = ({
                 }}
               />
 
-              <PatternFormat
+              <InputField
+                name="cardNumber"
+                placeholder={`e.g. ${splitCreditCardNumber(
+                  "1234567891230000"
+                )}`}
+                value={splitCreditCardNumber(props.values.cardNumber)}
+                label="Card Number"
+                onError={props.touched.cardNumber && props.errors.cardNumber}
+                onChange={(e) => {
+                  handleInputChange(
+                    props.setFieldValue,
+                    "cardNumber",
+                    e.target.value
+                  );
+                  handleCardDetails({
+                    ...props.values,
+                    cardNumber: e.target.value,
+                  });
+                }}
+              />
+
+              {/* <PatternFormat
                 name="cardNumber"
                 customInput={InputField}
-                value={props.values.cardNumber}
                 placeholder={`e.g. ${splitCreditCardNumber(
                   "1234567891230000"
                 )}`}
@@ -143,7 +168,7 @@ const CardForm = ({
                     cardNumber: e.target.value,
                   });
                 }}
-              />
+              /> */}
 
               <article className="w-full grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex flex-col w-full gap-1">

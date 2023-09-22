@@ -6,6 +6,9 @@ interface InputFieldProps {
   placeholder: string;
   onChange?: (e: any) => void;
   onError: string | false | undefined;
+  value?: string | number;
+  maxLength?: number;
+  minLength?: number;
 }
 
 const InputField = ({
@@ -16,7 +19,11 @@ const InputField = ({
 }: InputFieldProps) => {
   return (
     <div className="flex flex-col gap-1">
-      {label && <label className="uppercase text-sm md:text-base font-medium">{label}</label>}
+      {label && (
+        <label className="uppercase text-sm md:text-base font-medium">
+          {label}
+        </label>
+      )}
       <Field
         name={name}
         placeholder={placeholder}
